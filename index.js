@@ -54,14 +54,28 @@ function buildAccount() {
       },
     ])
     .then((answer) => {
-      const accountName = answer["accountName"];
-      console.info(accountName);
+      let accountName;
+      if (
+        !answer["accountName"] ||
+        answer["accountName"].indexOf(" ") >= 0 ||
+        !/^[a-z]+$/i.test(answer["accountName"])
+      ) {
+        console.log(
+          chalk.bgRed.white(
+            "A sua conta deve possuir um nome válido.\nNão possuir espaços em branco.\nNão possuir números.\nNão possuir acentos.\nNão possuir caractéres especiais"
+          )
+        );
+        return buildAccount();
+      } else {
+        accountName = answer["accountName"];
+        console.info(accountName);
+      }
 
       if (!fs.existsSync("accounts")) {
         fs.mkdirSync("accounts");
       }
 
-      if (fs.existsSync(`accounts/${accountName}.json`)) {
+      if (fs.existsSync(`accounts/${accountName.toLowerCase()}.json`)) {
         console.log(
           chalk.bgRed.white("Esta conta já existe, escolha outro nome.")
         );
@@ -70,7 +84,7 @@ function buildAccount() {
       }
 
       fs.writeFileSync(
-        `accounts/${accountName}.json`,
+        `accounts/${accountName.toLowerCase()}.json`,
         '{"balance":0}',
         (err) => {
           console.log(err);
@@ -105,13 +119,32 @@ function deposit() {
       if (!checkAccount(accountName)) {
         return deposit();
       }
-      console.log("Sucesso");
+      inquirer
+        .prompt([
+          {
+            name: "amount",
+            message: "Quanto você deseja depositar?",
+          },
+        ])
+        .then((answer) => {
+          let amount;
+          if (!isNaN(answer["amount"])) {
+            amount = Number(answer["amount"]);
+          } else {
+            console.log(chalk.bgRed.white("Valor inválido. Tente novamente."));
+            deposit();
+            return;
+          }
+          addAmount(accountName, amount);
+          opetation();
+        })
+        .catch((err) => console.log(err));
     })
     .catch((err) => console.log(err));
 }
 
 function checkAccount(accountName) {
-  if (!fs.existsSync(`accounts/${accountName}.json`)) {
+  if (!fs.existsSync(`accounts/${accountName.toLowerCase()}.json`)) {
     console.log(chalk.bgRed.white("Esta conta não existe,tente novamente."));
     return false;
   }
@@ -127,4 +160,34 @@ function accountsExists() {
     );
     return true;
   }
+}
+
+function addAmount(accountName, amount) {
+  const accountData = getAccount(accountName);
+  if (!amount) {
+    console.log(chalk.bgRed.white("Insira um valor, por favor."));
+  }
+
+  accountData.balance = parseFloat(amount) + parseFloat(accountData.balance);
+
+  fs.writeFileSync(
+    `accounts/${accountName.toLowerCase()}.json`,
+    JSON.stringify(accountData),
+    (err) => {
+      console.log(err);
+    }
+  );
+
+  console.log(chalk.green(`Valor depositado: R$ ${amount}`));
+}
+
+function getAccount(accountName) {
+  const accountJSON = fs.readFileSync(
+    `accounts/${accountName.toLowerCase()}.json`,
+    {
+      encoding: "utf-8",
+      flag: "r",
+    }
+  );
+  return JSON.parse(accountJSON);
 }
