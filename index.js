@@ -29,6 +29,7 @@ function opetation() {
       if (action === "Criar Conta") {
         createAccount();
       } else if (action === "Consultar Saldo") {
+        getAccountBalance();
       } else if (action === "Depósito") {
         deposit();
       } else if (action === "Sacar") {
@@ -62,7 +63,7 @@ function buildAccount() {
       ) {
         console.log(
           chalk.bgRed.white(
-            "A sua conta deve possuir um nome válido.\nNão possuir espaços em branco.\nNão possuir números.\nNão possuir acentos.\nNão possuir caractéres especiais"
+            "A sua conta deve possuir um nome válido. Tente novamente.\nNão possuir espaços em branco.\nNão possuir números.\nNão possuir acentos.\nNão possuir caractéres especiais."
           )
         );
         return buildAccount();
@@ -169,6 +170,7 @@ function addAmount(accountName, amount) {
   }
 
   accountData.balance = parseFloat(amount) + parseFloat(accountData.balance);
+  accountData.balance = accountData.balance.toFixed(2);
 
   fs.writeFileSync(
     `accounts/${accountName.toLowerCase()}.json`,
@@ -190,4 +192,35 @@ function getAccount(accountName) {
     }
   );
   return JSON.parse(accountJSON);
+}
+
+function getAccountBalance() {
+  if (accountsExists()) {
+    return buildAccount();
+  }
+  inquirer
+    .prompt([
+      {
+        name: "accountName",
+        message: "Qual o nome da sua conta?",
+      },
+    ])
+    .then((answer) => {
+      const accountName = answer["accountName"];
+
+      if (!checkAccount(accountName)) {
+        return getAccountBalance();
+      }
+
+      const accountData = getAccount(accountName);
+
+      console.log(
+        chalk.bgBlue.white(
+          `Olá, ${accountName}, o saldo da sua conta é de R$ ${accountData.balance}`
+        )
+      );
+
+      opetation();
+    })
+    .catch((err) => console.log(err));
 }
