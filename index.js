@@ -32,8 +32,7 @@ function opetation() {
       } else if (action === "Depósito") {
       } else if (action === "Sacar") {
       } else if (action === "Sair") {
-        console.log(chalk.bgBlue.white("Obrigado por usar o Accounts!"));
-        process.exit();
+        exit();
       }
     })
     .catch((err) => console.log(err));
@@ -81,4 +80,9 @@ function buildAccount() {
       opetation();
     })
     .catch((err) => console.log(err));
+}
+
+function exit(){
+  console.log(chalk.bgBlue.white("Obrigado por usar o Accounts!"));
+  process.exit();
 }
