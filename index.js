@@ -18,7 +18,7 @@ function opetation() {
           "Criar Conta",
           "Consultar Saldo",
           "Depósito",
-          "Sacar",
+          "Saque",
           "Sair",
         ],
       },
@@ -32,7 +32,8 @@ function opetation() {
         getAccountBalance();
       } else if (action === "Depósito") {
         deposit();
-      } else if (action === "Sacar") {
+      } else if (action === "Saque") {
+        withDraw();
       } else if (action === "Sair") {
         exit();
       }
@@ -112,7 +113,7 @@ function deposit() {
     .prompt([
       {
         name: "accountName",
-        message: "Qual o nome da sua conta?",
+        message: "[DEPÓSITO] Qual o nome da sua conta?",
       },
     ])
     .then((answer) => {
@@ -166,21 +167,13 @@ function accountsExists() {
 function addAmount(accountName, amount) {
   const accountData = getAccount(accountName);
   if (!amount) {
-    console.log(chalk.bgRed.white("Insira um valor, por favor."));
+    return console.log(chalk.bgRed.white("Insira um valor, por favor."));
   }
 
   accountData.balance = parseFloat(amount) + parseFloat(accountData.balance);
-  accountData.balance = accountData.balance.toFixed(2);
+  save(accountName, accountData);
 
-  fs.writeFileSync(
-    `accounts/${accountName.toLowerCase()}.json`,
-    JSON.stringify(accountData),
-    (err) => {
-      console.log(err);
-    }
-  );
-
-  console.log(chalk.green(`Valor depositado: R$ ${amount}`));
+  console.log(chalk.green(`Valor depositado: R$ ${amount.toFixed(2)}`));
 }
 
 function getAccount(accountName) {
@@ -223,4 +216,74 @@ function getAccountBalance() {
       opetation();
     })
     .catch((err) => console.log(err));
+}
+
+function withDraw() {
+  if (accountsExists()) {
+    return buildAccount();
+  }
+  inquirer
+    .prompt([
+      {
+        name: "accountName",
+        message: "[SAQUE] Qual o nome da sua conta?",
+      },
+    ])
+    .then((answer) => {
+      const accountName = answer["accountName"];
+
+      if (!checkAccount(accountName)) {
+        return withDraw();
+      }
+
+      inquirer
+        .prompt([
+          {
+            name: "amount",
+            message: "Qual o valor do saque?",
+          },
+        ])
+        .then((answer) => {
+          let amount;
+          if (!isNaN(answer["amount"])) {
+            amount = Number(answer["amount"]);
+          } else {
+            console.log(chalk.bgRed.white("Valor inválido. Tente novamente."));
+            withDraw();
+            return;
+          }
+          removeAmount(accountName, amount);
+          opetation();
+        })
+        .catch((err) => console.log(err));
+    })
+    .catch((err) => console.log(err));
+}
+
+function removeAmount(accountName, amount) {
+  const accountData = getAccount(accountName);
+  if (!amount) {
+    return console.log(chalk.bgRed.white("Insira um valor, por favor."));
+  }
+
+  if (accountData.balance < amount) {
+    return console.log(chalk.bgRed.white("Valor indisponível."));
+  }
+
+  accountData.balance = parseFloat(accountData.balance) - parseFloat(amount);
+  save(accountName, accountData);
+
+  console.log(chalk.green(`Valor sacado: R$ ${amount.toFixed(2)}`));
+}
+
+function save(accountName, accountData) {
+  accountData.balance = accountData.balance.toFixed(2);
+
+  fs.writeFileSync(
+    `accounts/${accountName.toLowerCase()}.json`,
+    JSON.stringify(accountData),
+    (err) => {
+      console.log(err);
+    }
+  );
 }
