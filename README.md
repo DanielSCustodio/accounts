@@ -1,5 +1,5 @@
 # accounts
-Sistema em node.js que simula operações bancária com validações.<br/>
+Sistema em node.js que simula operações bancárias com validações.<br/>
 ## Operações
   - `Criar Conta`<br/>
   - `Consultar Saldo`<br/>
