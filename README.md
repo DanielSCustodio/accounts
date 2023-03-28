@@ -11,5 +11,5 @@ Sistema em node.js que simula operações bancárias com validações.<br/>
 
 
 ### Para executar esta aplicação:
-- 1º `npm install` ou `yarn`
-- 2º `npm start` ou `yarn start`
+1º `npm install` ou `yarn`
+2º `npm start` ou `yarn start`
